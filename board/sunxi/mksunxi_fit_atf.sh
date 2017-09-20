@@ -15,11 +15,11 @@ if [ ! -f "$BL31" ]; then
 fi
 
 if grep -q "^CONFIG_MACH_SUN50I_H6=y" .config; then
-	BL31_ADDR=0x104000
-	SCP_ADDR=0x110000
+	BL31_ADDR=0x10c000
+	SCP_ADDR=0x100000
 else
-	BL31_ADDR=0x44000
-	SCP_ADDR=0x50000
+	BL31_ADDR=0x4c000
+	SCP_ADDR=0x40000
 fi
 
 cat << __HEADER_EOF
