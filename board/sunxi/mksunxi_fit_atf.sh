@@ -19,7 +19,7 @@ if grep -q "^CONFIG_MACH_SUN50I_H6=y" .config; then
 	SCP_ADDR=0x110000
 else
 	BL31_ADDR=0x44000
-	SCP_ADDR=0x50000
+	SCP_ADDR=0x4c000
 fi
 
 cat << __HEADER_EOF
