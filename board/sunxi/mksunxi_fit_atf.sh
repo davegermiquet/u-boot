@@ -1,11 +1,12 @@
 #!/bin/sh
 #
-# script to generate FIT image source for 64-bit sunxi boards with
-# ARM Trusted Firmware and multiple device trees (given on the command line)
+# script to generate FIT image source for 64-bit sunxi boards with ARM Trusted
+# Firmware, SCP firmware, and multiple device trees (given on the command line)
 #
 # usage: $0 <dt_name> [<dt_name> [<dt_name] ...]
 
 [ -z "$BL31" ] && BL31="bl31.bin"
+[ -z "$SCP" ] && SCP="scp.bin"
 
 if [ ! -f "$BL31" ]; then
 	echo "WARNING: BL31 file $BL31 NOT found, resulting binary is non-functional" >&2
@@ -15,15 +16,17 @@ fi
 
 if grep -q "^CONFIG_MACH_SUN50I_H6=y" .config; then
 	BL31_ADDR=0x104000
+	SCP_ADDR=0x110000
 else
 	BL31_ADDR=0x44000
+	SCP_ADDR=0x50000
 fi
 
 cat << __HEADER_EOF
 /dts-v1/;
 
 / {
-	description = "Configuration to load ATF before U-Boot";
+	description = "Configuration to load ATF and SCP before U-Boot";
 	#address-cells = <1>;
 
 	images {
@@ -48,6 +51,19 @@ cat << __HEADER_EOF
 		};
 __HEADER_EOF
 
+if [ -f "$SCP" ]; then
+	cat << __SCP_EOF
+		scp {
+			description = "SCP Firmware";
+			data = /incbin/("$SCP");
+			type = "firmware";
+			arch = "or1k";
+			compression = "none";
+			load = <$SCP_ADDR>;
+		};
+__SCP_EOF
+fi
+
 cnt=1
 for dtname
 do
@@ -69,6 +85,12 @@ cat << __CONF_HEADER_EOF
 
 __CONF_HEADER_EOF
 
+if [ -f "$SCP" ]; then
+	LOADABLES='"uboot", "scp"'
+else
+	LOADABLES='"uboot"'
+fi
+
 cnt=1
 for dtname
 do
@@ -76,7 +98,7 @@ do
 		config_$cnt {
 			description = "$(basename $dtname .dtb)";
 			firmware = "atf";
-			loadables = "uboot";
+			loadables = $LOADABLES;
 			fdt = "fdt_$cnt";
 		};
 __CONF_SECTION_EOF
