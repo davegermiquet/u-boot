@@ -117,11 +117,10 @@ void clock_set_pll1(unsigned int clk)
 	int k = 1;
 	int m = 1;
 
-	if (clk > 1152000000) {
+	if (clk >= 1368000000) {
+		k = 3;
+	} else if (clk >= 768000000) {
 		k = 2;
-	} else if (clk > 768000000) {
-		k = 4;
-		m = 2;
 	}
 
 	/* Switch to 24MHz clock while changing PLL1 */
@@ -137,7 +136,9 @@ void clock_set_pll1(unsigned int clk)
 	writel(CCM_PLL1_CTRL_EN | CCM_PLL1_CTRL_P(p) |
 	       CCM_PLL1_CTRL_N(clk / (24000000 * k / m)) |
 	       CCM_PLL1_CTRL_K(k) | CCM_PLL1_CTRL_M(m), &ccm->pll1_cfg);
-	sdelay(200);
+
+	while (!(readl(&ccm->pll1_cfg) & CCM_PLL1_CTRL_LOCK))
+		;
 
 	/* Switch CPU to PLL1 */
 	writel(AXI_DIV_3 << AXI_DIV_SHIFT |
@@ -257,7 +258,7 @@ done:
 #endif
 
 #ifdef CONFIG_SUNXI_DE2
-void clock_set_pll10(unsigned int clk)
+void clock_set_pll_de(unsigned int clk)
 {
 	struct sunxi_ccm_reg * const ccm =
 		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;

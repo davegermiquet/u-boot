@@ -277,6 +277,9 @@ HOST_LFS_LIBS := $(shell getconf LFS_LIBS 2>/dev/null)
 
 HOSTCC       = cc
 HOSTCXX      = c++
+HOSTCFLAGS   = -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer \
+		$(if $(CONFIG_TOOLS_DEBUG),-g) -Wno-stringop-truncation -Wno-sign-compare
+HOSTCXXFLAGS = -O2
 KBUILD_HOSTCFLAGS   := -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer \
 		$(if $(CONFIG_TOOLS_DEBUG),-g) $(HOST_LFS_CFLAGS) $(HOSTCFLAGS)
 KBUILD_HOSTCXXFLAGS := -O2 $(HOST_LFS_CFLAGS) $(HOSTCXXFLAGS)
