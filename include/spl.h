@@ -135,7 +135,11 @@ int spl_load_simple_fit(struct spl_image_info *spl_image,
 #define SPL_FIT_FOUND		2
 
 /* SPL common functions */
+#ifdef CONFIG_SPL_SERIAL_SUPPORT
 void preloader_console_init(void);
+#else
+static inline void preloader_console_init(void) {}
+#endif
 u32 spl_boot_device(void);
 u32 spl_boot_mode(const u32 boot_device);
 int spl_boot_partition(const u32 boot_device);
