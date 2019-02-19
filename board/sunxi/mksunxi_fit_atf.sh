@@ -7,7 +7,7 @@
 
 [ -z "$BL31" ] && BL31="bl31.bin"
 
-if [ ! -f $BL31 ]; then
+if [ ! -f "$BL31" ]; then
 	echo "WARNING: BL31 file $BL31 NOT found, resulting binary is non-functional" >&2
 	echo "Please read the section on ARM Trusted Firmware (ATF) in board/sunxi/README.sunxi64" >&2
 	BL31=/dev/null
@@ -47,7 +47,7 @@ cat << __HEADER_EOF
 __HEADER_EOF
 
 cnt=1
-for dtname in $*
+for dtname
 do
 	cat << __FDT_IMAGE_EOF
 		fdt_$cnt {
@@ -68,7 +68,7 @@ cat << __CONF_HEADER_EOF
 __CONF_HEADER_EOF
 
 cnt=1
-for dtname in $*
+for dtname
 do
 	cat << __CONF_SECTION_EOF
 		config_$cnt {
@@ -81,7 +81,7 @@ __CONF_SECTION_EOF
 	cnt=$((cnt+1))
 done
 
-cat << __ITS_EOF
+cat << __FOOTER_EOF
 	};
 };
-__ITS_EOF
+__FOOTER_EOF
