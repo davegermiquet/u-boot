@@ -964,7 +964,6 @@ int misc_init_r(void)
 	// no longer needed
 	lradc_disable();
 #endif
->>>>>>> Disable new gcc8 warnings in Makefile
 
 	setup_environment(gd->fdt_blob);
 

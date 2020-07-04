@@ -31,6 +31,7 @@ targets += dt.dtb dt-spl.dtb
 
 $(DTB): arch-dtbs
 	$(Q)test -e $@ || (						\
+        echo "$@"; \
 	echo >&2;							\
 	echo >&2 "Device Tree Source is not correctly specified.";	\
 	echo >&2 "Please define 'CONFIG_DEFAULT_DEVICE_TREE'";		\
@@ -52,7 +53,6 @@ obj-$(CONFIG_OF_EMBED) := dt.dtb.o
 endif
 
 dtbs: $(obj)/dt.dtb $(obj)/dt-spl.dtb
-	@:
 
 clean-files := dt.dtb.S dt-spl.dtb.S
 
