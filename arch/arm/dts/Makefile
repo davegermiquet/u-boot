@@ -464,6 +464,7 @@ dtb-$(CONFIG_MACH_SUN5I) += \
 	sun5i-a13-olinuxino.dtb \
 	sun5i-a13-olinuxino-micro.dtb \
 	sun5i-a13-q8-tablet.dtb \
+	sun5i-a13-pocketbook-touch-lux-3.dtb \
 	sun5i-a13-utoo-p66.dtb \
 	sun5i-gr8-chip-pro.dtb \
 	sun5i-r8-chip.dtb
@@ -580,6 +581,7 @@ dtb-$(CONFIG_MACH_SUN50I_H6) += \
 	sun50i-h6-beelink-gs1.dtb \
 	sun50i-h6-orangepi-lite2.dtb \
 	sun50i-h6-orangepi-one-plus.dtb \
+	sun50i-h6-orangepi-3.dtb \
 	sun50i-h6-pine-h64.dtb
 dtb-$(CONFIG_MACH_SUN50I) += \
 	sun50i-a64-amarula-relic.dtb \
@@ -593,6 +595,7 @@ dtb-$(CONFIG_MACH_SUN50I) += \
 	sun50i-a64-pine64-plus.dtb \
 	sun50i-a64-pine64.dtb \
 	sun50i-a64-pinebook.dtb \
+	sun50i-a64-pinephone.dtb \
 	sun50i-a64-sopine-baseboard.dtb \
 	sun50i-a64-teres-i.dtb
 dtb-$(CONFIG_MACH_SUN9I) += \

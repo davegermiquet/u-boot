@@ -12,11 +12,13 @@ obj-y += version.o
 
 # command
 obj-$(CONFIG_CMD_ACPI) += acpi.o
+obj-$(CONFIG_CMD_AXP) += axp.o
 obj-$(CONFIG_CMD_AES) += aes.o
 obj-$(CONFIG_CMD_AB_SELECT) += ab_select.o
 obj-$(CONFIG_CMD_ADC) += adc.o
 obj-$(CONFIG_CMD_ARMFLASH) += armflash.o
 obj-$(CONFIG_HAVE_BLOCK_DEVICE) += blk_common.o
+obj-$(CONFIG_DM_VIDEO) += backlight.o
 obj-$(CONFIG_CMD_SOURCE) += source.o
 obj-$(CONFIG_CMD_BCB) += bcb.o
 obj-$(CONFIG_CMD_BDI) += bdinfo.o
@@ -99,6 +101,7 @@ obj-$(CONFIG_CMD_MTDPARTS) += mtdparts.o
 ifneq ($(CONFIG_CMD_NAND)$(CONFIG_CMD_SF),)
 obj-y += legacy-mtd-utils.o
 endif
+obj-$(CONFIG_CMD_MYDBG) += mydbg.o
 obj-$(CONFIG_CMD_NAND) += nand.o
 obj-$(CONFIG_CMD_NET) += net.o
 obj-$(CONFIG_CMD_NVEDIT_EFI) += nvedit_efi.o
@@ -134,6 +137,8 @@ obj-$(CONFIG_CMD_SMC) += smccc.o
 obj-$(CONFIG_CMD_SYSBOOT) += sysboot.o pxe_utils.o
 obj-$(CONFIG_CMD_TERMINAL) += terminal.o
 obj-$(CONFIG_CMD_TIME) += time.o
+obj-$(CONFIG_CMD_TOUCH) += touch.o
+obj-$(CONFIG_CMD_TMENU) += tmenu.o
 obj-$(CONFIG_CMD_TRACE) += trace.o
 obj-$(CONFIG_HUSH_PARSER) += test.o
 obj-$(CONFIG_CMD_TPM) += tpm-common.o
@@ -175,6 +180,7 @@ obj-$(CONFIG_CMD_PMIC) += pmic.o
 obj-$(CONFIG_CMD_REGULATOR) += regulator.o
 
 obj-$(CONFIG_CMD_BLOB) += blob.o
+obj-$(CONFIG_CMD_SUNXI_ARISC) += sunxi-arisc.o
 
 # Android Verified Boot 2.0
 obj-$(CONFIG_CMD_AVB) += avb.o

@@ -839,6 +839,13 @@ config CMD_ADC
 	  Shows ADC device info and permit printing one-shot analog converted
 	  data from a named Analog to Digital Converter.
 
+config CMD_AXP
+	bool "axp - Read information from AXP813 PMIC"
+	depends on AXP818_POWER
+	help
+	  Shows A/D voltage, battery presence, battery capacity, charger
+	  presence based on register values inside AXP813.
+
 config CMD_BCB
 	bool "bcb"
 	depends on MMC
@@ -1128,6 +1135,13 @@ config CMD_MTD
 	help
 	  MTD commands support.
 
+config CMD_MYDBG
+	bool "mydbg - My custom debugging command"
+	depends on MACH_SUN8I_A83T
+	help
+	  Nothing to see here, just an easy to access temporary debugging
+	  command for development.
+
 config CMD_NAND
 	bool "nand"
 	default y if NAND_SUNXI
@@ -1293,6 +1307,12 @@ config CMD_TSI148
 	help
 	  This provides various sub-commands to initialise and configure the
 	  Turndra tsi148 device. See the command help for full details.
+
+config CMD_TOUCH
+	bool "touch - Read input from touchpanel"
+	select DM_TOUCHPANEL
+	help
+	  Shows list of touches on the touch panel device.
 
 config CMD_UFS
 	bool "Enable UFS - Universal Flash Subsystem commands"
@@ -1757,6 +1777,14 @@ config CMD_TIMER
 	help
 	  Access the system timer.
 
+config CMD_TMENU
+	bool "tmenu - Display boot menu and respond to touch"
+	depends on DM_TOUCHPANEL && DM_VIDEO
+	help
+	  Shows a menu of items that can be controlled using touch panel.
+	  This is useful for touch based devices like tablets to select
+	  alternative boot options (multi-boot).
+
 config CMD_SOUND
 	bool "sound"
 	depends on SOUND
@@ -1806,6 +1834,15 @@ config CMD_UUID
 endmenu
 
 source "cmd/ti/Kconfig"
+
+menu "sunxi specific command line interface"
+
+config CMD_SUNXI_ARISC
+	bool "command for starting ARISC code on sunxi platforms"
+	help
+	   Support for starting OpenRISC coprocessor on sunxi platforms.
+
+endmenu
 
 config CMD_BOOTSTAGE
 	bool "Enable the 'bootstage' command"

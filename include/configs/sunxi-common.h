@@ -31,9 +31,7 @@
 # define CONFIG_MACH_TYPE_COMPAT_REV	1
 #endif
 
-#ifdef CONFIG_ARM64
-#define CONFIG_SYS_BOOTM_LEN		(32 << 20)
-#endif
+#define CONFIG_SYS_BOOTM_LEN		(64 << 20)
 
 /* Serial & console */
 #define CONFIG_SYS_NS16550_SERIAL
@@ -437,9 +435,13 @@ extern int soft_i2c_gpio_scl;
 	"stdout=serial,vga\0" \
 	"stderr=serial,vga\0"
 #elif CONFIG_DM_VIDEO
+#define CONFIG_BMP_32BPP
+#define CONFIG_BMP_24BPP
+#define CONFIG_VIDEO_BMP_GZIP
+#define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE (1024*600*3 * 2)
 #define CONSOLE_STDOUT_SETTINGS \
-	"stdout=serial,vidconsole\0" \
-	"stderr=serial,vidconsole\0"
+	"stdout=serial\0" \
+	"stderr=serial\0"
 #else
 #define CONSOLE_STDOUT_SETTINGS \
 	"stdout=serial\0" \

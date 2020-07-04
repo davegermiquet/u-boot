@@ -1,5 +1,10 @@
 if ARCH_SUNXI
 
+config PINEPHONE_LEDS
+	bool "Notify boot status via LEDs on PinePhone"
+	---help---
+	LED boot notification.
+
 config SPL_LDSCRIPT
 	default "arch/arm/cpu/armv7/sunxi/u-boot-spl.lds" if !ARM64
 
@@ -230,6 +235,7 @@ config MACH_SUN8I_A83T
 	select MMC_SUNXI_HAS_NEW_MODE
 	select MMC_SUNXI_HAS_MODE_SWITCH
 	select SUPPORT_SPL
+	select SUNXI_DE2
 
 config MACH_SUN8I_H3
 	bool "sun8i (Allwinner H3)"
@@ -276,11 +282,11 @@ config MACH_SUN9I
 config MACH_SUN50I
 	bool "sun50i (Allwinner A64)"
 	select ARM64
-	select SPI
-	select DM_I2C
-	select DM_SPI if SPI
-	select DM_SPI_FLASH
-	select PHY_SUN4I_USB
+#	select SPI
+#	select DM_I2C
+#	select DM_SPI if SPI
+#	select DM_SPI_FLASH
+#	select PHY_SUN4I_USB
 	select SUN6I_PRCM
 	select SUNXI_DE2
 	select SUNXI_GEN_SUN6I
@@ -306,6 +312,7 @@ config MACH_SUN50I_H6
 	select FIT
 	select PHY_SUN4I_USB
 	select SPL_LOAD_FIT
+	select MMC_SUNXI_HAS_NEW_MODE
 	select DRAM_SUN50I_H6
 
 endchoice
@@ -583,6 +590,10 @@ config MACPWR
 	help
 	  Set the pin used to power the MAC. This takes a string in the format
 	  understood by sunxi_name_to_gpio, e.g. PH1 for pin 1 of port H.
+
+config MMC2_BUS_WIDTH
+	int "Bus width for mmc2 (4 or 8)"
+	default 8
 
 config MMC0_CD_PIN
 	string "Card detect pin for mmc0"
@@ -923,7 +934,7 @@ config VIDEO_DE2
 
 choice
 	prompt "LCD panel support"
-	depends on VIDEO_SUNXI
+	depends on VIDEO_SUNXI || VIDEO_DE2
 	---help---
 	Select which type of LCD panel to support.
 
@@ -1009,5 +1020,16 @@ config PINE64_DT_SELECTION
 	  512MiB DRAM, and Pine A64+ has 1GiB or 2GiB. By selecting this
 	  option, the device tree selection code specific to Pine64 which
 	  utilizes the DRAM size will be enabled.
+
+config FIXUP_BDADDR
+	string "Fixup the Bluetooth controller address"
+	default ""
+	help
+	  This option specifies the DT compatible name of the Bluetooth
+	  controller for which to set the "local-bd-address" property.
+	  Set this option if your device ships with the Bluetooth controller
+	  default address.
+	  The used address is "bdaddr" if set, and "ethaddr" with the LSB
+	  flipped elsewise.
 
 endif

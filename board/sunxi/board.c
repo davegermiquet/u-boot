@@ -38,11 +38,13 @@
 #include <u-boot/crc.h>
 #include <env_internal.h>
 #include <linux/libfdt.h>
+#include <fdt_support.h>
 #include <nand.h>
 #include <net.h>
 #include <spl.h>
 #include <sy8106a.h>
 #include <asm/setup.h>
+#include "lradc.h"
 
 #if defined CONFIG_VIDEO_LCD_PANEL_I2C && !(defined CONFIG_SPL_BUILD)
 /* So that we can use pin names in Kconfig and sunxi_name_to_gpio() */
@@ -100,6 +102,10 @@ void i2c_init_board(void)
 #elif defined(CONFIG_MACH_SUN6I)
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(14), SUN6I_GPH_TWI0);
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(15), SUN6I_GPH_TWI0);
+	clock_twi_onoff(0, 1);
+#elif defined(CONFIG_MACH_SUN8I_A83T)
+	sunxi_gpio_set_cfgpin(SUNXI_GPH(0), SUN8I_GPH_TWI0);
+	sunxi_gpio_set_cfgpin(SUNXI_GPH(1), SUN8I_GPH_TWI0);
 	clock_twi_onoff(0, 1);
 #elif defined(CONFIG_MACH_SUN8I)
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(2), SUN8I_GPH_TWI0);
@@ -260,16 +266,20 @@ int board_init(void)
 		return ret;
 
 #ifdef CONFIG_SATAPWR
-	satapwr_pin = sunxi_name_to_gpio(CONFIG_SATAPWR);
-	gpio_request(satapwr_pin, "satapwr");
-	gpio_direction_output(satapwr_pin, 1);
-	/* Give attached sata device time to power-up to avoid link timeouts */
-	mdelay(500);
+	if (CONFIG_SATAPWR[0]) {
+		satapwr_pin = sunxi_name_to_gpio(CONFIG_SATAPWR);
+		gpio_request(satapwr_pin, "satapwr");
+		gpio_direction_output(satapwr_pin, 1);
+		/* Give attached sata device time to power-up to avoid link timeouts */
+		mdelay(500);
+	}
 #endif
 #ifdef CONFIG_MACPWR
-	macpwr_pin = sunxi_name_to_gpio(CONFIG_MACPWR);
-	gpio_request(macpwr_pin, "macpwr");
-	gpio_direction_output(macpwr_pin, 1);
+	if (CONFIG_MACPWR[0]) {
+		macpwr_pin = sunxi_name_to_gpio(CONFIG_MACPWR);
+		gpio_request(macpwr_pin, "macpwr");
+		gpio_direction_output(macpwr_pin, 1);
+	}
 #endif
 
 #ifdef CONFIG_DM_I2C
@@ -465,8 +475,13 @@ static void mmc_pinmux_setup(int sdc)
 				sunxi_gpio_set_drv(pin, 2);
 			}
 		} else {
+#if CONFIG_MMC2_BUS_WIDTH == 4
+			/* SDC2: PC6-PC15 */
+			for (pin = SUNXI_GPC(6); pin <= SUNXI_GPC(11); pin++) {
+#else
 			/* SDC2: PC6-PC15 */
 			for (pin = SUNXI_GPC(6); pin <= SUNXI_GPC(15); pin++) {
+#endif
 				sunxi_gpio_set_cfgpin(pin, SUNXI_GPC_SDC2);
 				sunxi_gpio_set_pull(pin, SUNXI_GPIO_PULL_UP);
 				sunxi_gpio_set_drv(pin, 2);
@@ -613,6 +628,18 @@ void sunxi_board_init(void)
 {
 	int power_failed = 0;
 
+#ifdef CONFIG_MACH_SUN50I
+	// we init the lradc in SPL to get the ADC started early to have
+	// a valid sample when U-Boot main binary gets executed.
+	lradc_enable();
+#endif
+
+#ifdef CONFIG_PINEPHONE_LEDS
+	/* PD18:G PD19:R PD20:B */
+	gpio_request(SUNXI_GPD(18), "led:green");
+	gpio_direction_output(SUNXI_GPD(18), 1);
+#endif
+
 #ifdef CONFIG_SY8106A_POWER
 	power_failed = sy8106a_set_vout1(CONFIG_SY8106A_VOUT1_VOLT);
 #endif
@@ -634,6 +661,9 @@ void sunxi_board_init(void)
 #if defined CONFIG_AXP221_POWER || defined CONFIG_AXP809_POWER || \
 	defined CONFIG_AXP818_POWER
 	power_failed |= axp_set_dcdc5(CONFIG_AXP_DCDC5_VOLT);
+#endif
+#if defined CONFIG_AXP818_POWER
+	power_failed |= axp_set_dcdc6(CONFIG_AXP_DCDC6_VOLT);
 #endif
 
 #if defined CONFIG_AXP221_POWER || defined CONFIG_AXP809_POWER || \
@@ -665,6 +695,7 @@ void sunxi_board_init(void)
 	power_failed |= axp_set_fldo(1, CONFIG_AXP_FLDO1_VOLT);
 	power_failed |= axp_set_fldo(2, CONFIG_AXP_FLDO2_VOLT);
 	power_failed |= axp_set_fldo(3, CONFIG_AXP_FLDO3_VOLT);
+	power_failed |= axp_gpio0_enable_ldo_set_voltage(CONFIG_AXP_GPIO_LDO0_VOLT);
 #endif
 
 #if defined CONFIG_AXP809_POWER || defined CONFIG_AXP818_POWER
@@ -783,6 +814,7 @@ static void setup_environment(const void *fdt)
 	unsigned int sid[4];
 	uint8_t mac_addr[6];
 	char ethaddr[16];
+	uchar tmp[ETH_ALEN], bdaddr[ETH_ALEN];
 	int i, ret;
 
 	ret = sunxi_get_sid(sid);
@@ -838,6 +870,30 @@ static void setup_environment(const void *fdt)
 
 			env_set("serial#", serial_string);
 		}
+
+		/* Some devices ship with a Bluetooth controller default address.
+		 * Set a valid address through the device tree.
+		 */
+#ifdef CONFIG_FIXUP_BDADDR
+		if (CONFIG_FIXUP_BDADDR[0]) {
+			if (!eth_env_get_enetaddr("bdaddr", tmp)) {
+				tmp[0] = (5 << 4) | 0x02;
+				tmp[1] = (sid[0] >>  0) & 0xff;
+				tmp[2] = (sid[3] >> 24) & 0xff;
+				tmp[3] = (sid[3] >> 16) & 0xff;
+				tmp[4] = (sid[3] >>  8) & 0xff;
+				tmp[5] = (sid[3] >>  0) & 0xff;
+			}
+
+			/* Addresses need to be in the binary format of the corresponding stack */
+			for (i = 0; i < ETH_ALEN; ++i)
+				bdaddr[i] = tmp[ETH_ALEN - i - 1];
+
+			do_fixup_by_compat((void*)fdt, CONFIG_FIXUP_BDADDR,
+					   "local-bd-address", bdaddr,
+					   ETH_ALEN, 1);
+		}
+#endif
 	}
 }
 
@@ -860,6 +916,17 @@ int misc_init_r(void)
 	} else if (boot == BOOT_DEVICE_MMC2) {
 		env_set("mmc_bootdev", "1");
 	}
+
+#ifdef CONFIG_MACH_SUN50I
+	int key = lradc_get_pressed_key();
+	if (key == KEY_VOLUMEDOWN)
+		env_set("volume_key", "down");
+	else if (key == KEY_VOLUMEUP)
+		env_set("volume_key", "up");
+	
+	// no longer needed
+	lradc_disable();
+#endif
 
 	setup_environment(gd->fdt_blob);
 
@@ -885,6 +952,15 @@ int ft_board_setup(void *blob, bd_t *bd)
 	if (r)
 		return r;
 #endif
+
+#ifdef CONFIG_PINEPHONE_LEDS
+	gpio_request(SUNXI_GPD(18), "led:green");
+	gpio_direction_output(SUNXI_GPD(18), 0);
+
+	gpio_request(SUNXI_GPD(19), "led:blue");
+	gpio_direction_output(SUNXI_GPD(19), 1);
+#endif
+
 	return 0;
 }
 
